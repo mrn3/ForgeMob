@@ -429,6 +429,7 @@ function PhotoEditorInner({ docId }: { docId: string }) {
       ;(img as unknown as Record<string, unknown>).layerId = `layer-${Date.now()}`
       ;(img as unknown as Record<string, unknown>).layerName = 'Image 1'
       canvas.add(img)
+      canvas.centerObject(img)
       canvas.setActiveObject(img)
       setSelectedObject(img)
       setLayerName('Image 1')
