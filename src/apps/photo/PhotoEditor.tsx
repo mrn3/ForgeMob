@@ -406,20 +406,32 @@ function PhotoEditorInner({ docId }: { docId: string }) {
     FabricImage.fromURL(url).then((img) => {
       const canvas = canvasRef.current
       if (!canvas) return
-      const w = canvas.getWidth()
-      const h = canvas.getHeight()
-      const scale = Math.min(w / (img.width ?? 1), h / (img.height ?? 1), 1)
-      img.scale(scale)
-      img.set({
-        left: (w - (img.width ?? 0) * scale) / 2,
-        top: (h - (img.height ?? 0) * scale) / 2,
+      const imgW = img.width ?? 1
+      const imgH = img.height ?? 1
+      // Resize canvas to match the opened photo
+      canvas.setDimensions({ width: imgW, height: imgH })
+      canvas.backgroundColor = '#ffffff'
+      canvas.clear()
+      const bg = new Rect({
+        left: 0,
+        top: 0,
+        width: imgW,
+        height: imgH,
+        fill: '#ffffff',
+        selectable: false,
+        evented: false,
       })
+      ;(bg as unknown as Record<string, unknown>).layerId = 'layer-0'
+      ;(bg as unknown as Record<string, unknown>).layerName = 'Background'
+      canvas.add(bg)
+      img.set({ left: 0, top: 0 })
+      img.scale(1)
       ;(img as unknown as Record<string, unknown>).layerId = `layer-${Date.now()}`
-      ;(img as unknown as Record<string, unknown>).layerName = `Image ${objects.length + 1}`
+      ;(img as unknown as Record<string, unknown>).layerName = 'Image 1'
       canvas.add(img)
       canvas.setActiveObject(img)
       setSelectedObject(img)
-      setLayerName(`Image ${objects.length + 1}`)
+      setLayerName('Image 1')
       saveHistory()
       persistCanvas()
       setLayerTrigger((t) => t + 1)
