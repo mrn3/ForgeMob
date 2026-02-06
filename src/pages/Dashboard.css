@@ -1,0 +1,426 @@
+/* Canva-style Dashboard layout - fixed height so .main can scroll */
+.dashboard {
+  display: flex;
+  height: 100%;
+  min-height: 100vh;
+  width: 100%;
+  overflow: hidden;
+}
+
+/* Left sidebar */
+.sidebar {
+  width: 72px;
+  min-width: 72px;
+  background: var(--canva-sidebar);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 12px 0;
+  gap: 4px;
+}
+
+.sidebar-item {
+  width: 48px;
+  height: 48px;
+  border-radius: var(--canva-radius);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255, 255, 255, 0.85);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.sidebar-item:hover {
+  background: var(--canva-sidebar-hover);
+  color: #fff;
+}
+
+.sidebar-item.active {
+  background: var(--canva-accent);
+  color: #fff;
+}
+
+.sidebar-create {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--canva-accent);
+  color: #fff;
+  margin-bottom: 8px;
+  font-size: 24px;
+  line-height: 1;
+}
+
+.sidebar-create:hover {
+  background: var(--canva-accent-hover);
+}
+
+.sidebar-spacer {
+  flex: 1;
+}
+
+.sidebar-icon {
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Main content - scrollable when content overflows */
+.main {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 32px 48px 48px;
+  max-width: 1400px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.hero {
+  margin-bottom: 28px;
+}
+
+.hero-title {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--canva-text);
+  margin: 0 0 16px 0;
+  letter-spacing: -0.02em;
+}
+
+.hero-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  background: var(--canva-accent);
+  color: #fff;
+  border: none;
+  border-radius: var(--canva-radius-pill);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, transform 0.1s;
+}
+
+.hero-cta:hover {
+  background: var(--canva-accent-hover);
+  transform: translateY(-1px);
+}
+
+/* Pill tabs */
+.pill-tabs {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 24px;
+}
+
+.pill-tab {
+  padding: 8px 16px;
+  border-radius: var(--canva-radius-pill);
+  border: none;
+  background: transparent;
+  color: var(--canva-text-muted);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.pill-tab:hover {
+  background: rgba(0, 0, 0, 0.05);
+  color: var(--canva-text);
+}
+
+.pill-tab.active {
+  background: var(--canva-accent-light);
+  color: var(--canva-accent);
+}
+
+/* Search bar */
+.search-wrap {
+  margin-bottom: 32px;
+}
+
+.search-bar {
+  width: 100%;
+  max-width: 560px;
+  padding: 14px 20px 14px 44px;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: var(--canva-radius-pill);
+  font-size: 15px;
+  background: #fff;
+  box-shadow: var(--canva-shadow);
+  transition: box-shadow 0.15s, border-color 0.15s;
+  position: relative;
+}
+
+.search-bar::placeholder {
+  color: var(--canva-text-muted);
+}
+
+.search-bar:focus {
+  outline: none;
+  border-color: var(--canva-accent);
+  box-shadow: 0 0 0 3px var(--canva-accent-light);
+}
+
+.search-wrapper {
+  position: relative;
+  max-width: 560px;
+}
+
+.search-icon {
+  position: absolute;
+  left: 18px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--canva-text-muted);
+  pointer-events: none;
+  width: 20px;
+  height: 20px;
+}
+
+/* Section headings */
+.section-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--canva-text);
+  margin: 0 0 16px 0;
+}
+
+/* Category icons row */
+.category-row {
+  display: flex;
+  gap: 24px;
+  flex-wrap: wrap;
+  margin-bottom: 32px;
+}
+
+.category-icon-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  padding: 12px;
+  border-radius: var(--canva-radius);
+  transition: background 0.15s;
+  min-width: 80px;
+}
+
+.category-icon-wrap:hover {
+  background: rgba(255, 255, 255, 0.7);
+}
+
+.category-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 22px;
+}
+
+/* Explore templates - horizontal scroll cards */
+.explore-row {
+  display: flex;
+  gap: 16px;
+  overflow-x: auto;
+  padding-bottom: 12px;
+  margin-bottom: 40px;
+  scrollbar-width: thin;
+}
+
+.explore-row::-webkit-scrollbar {
+  height: 6px;
+}
+
+.explore-row::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 3px;
+}
+
+.explore-card {
+  flex: 0 0 160px;
+  height: 120px;
+  border-radius: var(--canva-radius);
+  padding: 16px;
+  cursor: pointer;
+  transition: transform 0.15s, box-shadow 0.15s;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  color: var(--canva-text);
+  font-weight: 600;
+  font-size: 14px;
+  text-decoration: none;
+  border: none;
+  text-align: left;
+  box-shadow: var(--canva-shadow);
+}
+
+.explore-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--canva-shadow-hover);
+}
+
+/* Grid of app cards (main create grid) */
+.app-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 20px;
+}
+
+.app-card {
+  background: #fff;
+  border-radius: var(--canva-radius);
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  transition: transform 0.15s, box-shadow 0.15s;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  box-shadow: var(--canva-shadow);
+  text-decoration: none;
+  color: inherit;
+}
+
+.app-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--canva-shadow-hover);
+  border-color: rgba(124, 58, 237, 0.2);
+}
+
+.app-card-icon-wrap {
+  width: 56px;
+  height: 56px;
+  border-radius: var(--canva-radius);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--canva-accent-light);
+  color: var(--canva-accent);
+}
+
+.app-card-title {
+  font-size: 15px;
+  font-weight: 600;
+  margin: 0;
+  text-align: center;
+}
+
+.app-card-desc {
+  font-size: 12px;
+  color: var(--canva-text-muted);
+  margin: 0;
+  text-align: center;
+}
+
+.app-card-btn {
+  padding: 8px 16px;
+  border-radius: var(--canva-radius-pill);
+  border: none;
+  background: var(--canva-accent);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 4px;
+  transition: background 0.15s;
+}
+
+.app-card-btn:hover {
+  background: var(--canva-accent-hover);
+}
+
+/* Modal */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  backdrop-filter: blur(2px);
+}
+
+.modal-box {
+  background: #fff;
+  padding: 28px;
+  border-radius: 16px;
+  min-width: 360px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+}
+
+.modal-title {
+  font-size: 18px;
+  font-weight: 700;
+  margin: 0 0 20px 0;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.modal-btn-primary {
+  padding: 10px 20px;
+  border-radius: var(--canva-radius-pill);
+  border: none;
+  background: var(--canva-accent);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.modal-btn-primary:hover {
+  background: var(--canva-accent-hover);
+}
+
+.modal-btn-secondary {
+  padding: 10px 20px;
+  border-radius: var(--canva-radius-pill);
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  background: #fff;
+  color: var(--canva-text);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.modal-btn-secondary:hover {
+  background: rgba(0, 0, 0, 0.04);
+}
+
+.modal-input {
+  width: 100%;
+  padding: 12px 16px;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: var(--canva-radius);
+  font-size: 14px;
+}
+
+.modal-input:focus {
+  outline: none;
+  border-color: var(--canva-accent);
+  box-shadow: 0 0 0 3px var(--canva-accent-light);
+}
+
+.modal-label {
+  display: block;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--canva-text-muted);
+  margin-bottom: 6px;
+}

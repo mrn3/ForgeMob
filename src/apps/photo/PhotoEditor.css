@@ -1,0 +1,358 @@
+/* Photoshop-style Photo Editor */
+.photo-editor {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 500px;
+  background: #2b2b2b;
+  color: #e0e0e0;
+}
+
+.photo-editor__body {
+  display: flex;
+  flex: 1;
+  min-height: 400px;
+}
+
+.photo-editor__left-panel {
+  width: 220px;
+  min-width: 180px;
+  background: #363636;
+  border-right: 1px solid #1e1e1e;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.photo-editor__layers-header {
+  padding: 8px 12px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #999;
+  border-bottom: 1px solid #1e1e1e;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.photo-editor__layers-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 4px 0;
+}
+
+.photo-editor__layer-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  font-size: 12px;
+  cursor: pointer;
+  border: 1px solid transparent;
+  margin: 2px 6px;
+  border-radius: 4px;
+}
+
+.photo-editor__layer-item:hover {
+  background: #454545;
+}
+
+.photo-editor__layer-item.active {
+  background: #0d6efd;
+  color: #fff;
+}
+
+.photo-editor__layer-item.active .photo-editor__layer-eye {
+  color: #fff;
+}
+
+.photo-editor__layer-eye {
+  flex-shrink: 0;
+  width: 20px;
+  cursor: pointer;
+  color: #999;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.photo-editor__layer-eye.hidden {
+  opacity: 0.4;
+}
+
+.photo-editor__layer-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.photo-editor__layer-delete {
+  flex-shrink: 0;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: #999;
+  cursor: pointer;
+  border-radius: 3px;
+  font-size: 14px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.photo-editor__layer-delete:hover {
+  background: #555;
+  color: #e74c3c;
+}
+
+.photo-editor__add-layer {
+  margin: 8px 12px;
+  padding: 8px 12px;
+  font-size: 12px;
+  background: #0d6efd;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.photo-editor__add-layer:hover {
+  background: #0b5ed7;
+}
+
+.photo-editor__canvas-wrap {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: auto;
+  padding: 24px;
+  background: #1e1e1e;
+  background-image:
+    linear-gradient(45deg, #2a2a2a 25%, transparent 25%),
+    linear-gradient(-45deg, #2a2a2a 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, #2a2a2a 75%),
+    linear-gradient(-45deg, transparent 75%, #2a2a2a 75%);
+  background-size: 20px 20px;
+  background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+  background-color: #1e1e1e;
+  position: relative;
+}
+
+.photo-editor__canvas-loading {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 1;
+  pointer-events: none;
+}
+
+.photo-editor__canvas-container {
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.5);
+  min-width: 100px;
+  min-height: 100px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.photo-editor__canvas-container canvas {
+  display: block;
+}
+
+.photo-editor__right-panel {
+  width: 260px;
+  min-width: 220px;
+  background: #363636;
+  border-left: 1px solid #1e1e1e;
+  padding: 12px;
+  overflow-y: auto;
+}
+
+.photo-editor__props-title {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #999;
+  margin-bottom: 12px;
+}
+
+.photo-editor__prop-section {
+  margin-bottom: 16px;
+}
+
+.photo-editor__prop-section:last-child {
+  margin-bottom: 0;
+}
+
+.photo-editor__color-input {
+  width: 100%;
+  height: 32px;
+  padding: 2px;
+  border: 1px solid #555;
+  border-radius: 4px;
+  background: #2b2b2b;
+  cursor: pointer;
+}
+
+.photo-editor__delete-layer {
+  width: 100%;
+  margin: 0;
+  padding: 8px 12px;
+  font-size: 12px;
+  background: transparent;
+  color: #e74c3c;
+  border: 1px solid #555;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.photo-editor__delete-layer:hover {
+  background: rgba(231, 76, 60, 0.15);
+}
+
+.photo-editor__prop-row {
+  margin-bottom: 12px;
+}
+
+.photo-editor__prop-row label {
+  display: block;
+  font-size: 11px;
+  color: #999;
+  margin-bottom: 4px;
+}
+
+.photo-editor__prop-row input,
+.photo-editor__prop-row select {
+  width: 100%;
+  padding: 6px 8px;
+  font-size: 12px;
+  background: #2b2b2b;
+  border: 1px solid #555;
+  border-radius: 4px;
+  color: #e0e0e0;
+}
+
+/* Top bar: File / Edit only */
+.photo-editor__top-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.photo-editor__menu-group {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.photo-editor__menu-btn {
+  padding: 6px 12px;
+  font-size: 12px;
+  border: none;
+  background: transparent;
+  color: #333;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+.photo-editor__menu-btn:hover:not(:disabled) {
+  background: rgba(0, 0, 0, 0.08);
+}
+
+.photo-editor__menu-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.photo-editor__menu-divider {
+  width: 1px;
+  height: 20px;
+  background: #ccc;
+}
+
+/* Left side: vertical tool strip + layers (Photoshop-style) */
+.photo-editor__left-side {
+  display: flex;
+  flex: 0 0 auto;
+  min-width: 0;
+}
+
+.photo-editor__tool-strip {
+  width: 52px;
+  flex-shrink: 0;
+  background: #2d2d2d;
+  border-right: 1px solid #1e1e1e;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 8px 0;
+  gap: 2px;
+}
+
+.photo-editor__tool-btn {
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: #b0b0b0;
+  cursor: pointer;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s, color 0.15s;
+}
+
+.photo-editor__tool-btn:hover {
+  background: #404040;
+  color: #fff;
+}
+
+.photo-editor__tool-btn.active {
+  background: #0d6efd;
+  color: #fff;
+}
+
+.photo-editor__tool-icon {
+  font-size: 18px;
+  line-height: 1;
+}
+
+.photo-editor__slider-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.photo-editor__slider-wrap input[type="range"] {
+  flex: 1;
+  accent-color: #0d6efd;
+}
+
+.photo-editor__slider-wrap span {
+  font-size: 11px;
+  color: #999;
+  min-width: 32px;
+}
+
+.photo-editor__no-selection {
+  font-size: 12px;
+  color: #666;
+  font-style: italic;
+}

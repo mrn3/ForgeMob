@@ -1,0 +1,45 @@
+{
+  "name": "forgemob",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "lint": "eslint .",
+    "preview": "vite preview",
+    "server": "npx y-websockets-server --port 1234",
+    "test": "vitest run",
+    "test:all": "npm run build && npm run test && echo 'Build and tests OK. Start server (npm run server) and dev (npm run dev) to test at http://localhost:5173'"
+  },
+  "dependencies": {
+    "@adobe/react-spectrum": "^3.34.0",
+    "@spectrum-icons/workflow": "^4.0.0",
+    "fabric": "^7.1.0",
+    "html2pdf.js": "^0.14.0",
+    "pptxgenjs": "^4.0.1",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-router-dom": "^6.28.0",
+    "y-websocket": "^2.0.3",
+    "yjs": "^13.6.20"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.13.0",
+    "@testing-library/jest-dom": "^6.6.3",
+    "@testing-library/react": "^16.0.0",
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
+    "@vitejs/plugin-react": "^4.3.3",
+    "eslint": "^9.13.0",
+    "eslint-plugin-react-hooks": "^5.0.0",
+    "eslint-plugin-react-refresh": "^0.4.14",
+    "globals": "^15.11.0",
+    "jsdom": "^25.0.0",
+    "typescript": "~5.6.2",
+    "typescript-eslint": "^8.11.0",
+    "vite": "^5.4.10",
+    "vitest": "^2.1.0",
+    "y-websockets-server": "*"
+  }
+}
