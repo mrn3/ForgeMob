@@ -1,8 +1,29 @@
-import { useParams } from 'react-router-dom'
+import { useParams, useNavigate } from 'react-router-dom'
 import { useYDoc, useYArray } from '@/collab/useCollaboration'
-import { EditorLayout } from '@/components/EditorLayout'
-import { Flex, ButtonGroup, Button, Picker, Item } from '@adobe/react-spectrum'
 import { useCallback, useRef, useState } from 'react'
+import Menu from '@spectrum-icons/workflow/Menu'
+import MoreVertical from '@spectrum-icons/workflow/MoreVertical'
+import Sync from '@spectrum-icons/workflow/Sync'
+import Chat from '@spectrum-icons/workflow/Chat'
+import VideoFilled from '@spectrum-icons/workflow/VideoFilled'
+import UserGroup from '@spectrum-icons/workflow/UserGroup'
+import Play from '@spectrum-icons/workflow/Play'
+import VisitShare from '@spectrum-icons/workflow/VisitShare'
+import Edit from '@spectrum-icons/workflow/Edit'
+import Hand from '@spectrum-icons/workflow/Hand'
+import Note from '@spectrum-icons/workflow/Note'
+import Type from '@spectrum-icons/workflow/Type'
+import Rectangle from '@spectrum-icons/workflow/Rectangle'
+import Circle from '@spectrum-icons/workflow/Circle'
+import Draw from '@spectrum-icons/workflow/Draw'
+import Link from '@spectrum-icons/workflow/Link'
+import Table from '@spectrum-icons/workflow/Table'
+import Comment from '@spectrum-icons/workflow/Comment'
+import UploadToCloud from '@spectrum-icons/workflow/UploadToCloud'
+import Add from '@spectrum-icons/workflow/Add'
+import Undo from '@spectrum-icons/workflow/Undo'
+import Redo from '@spectrum-icons/workflow/Redo'
+import './WhiteboardEditor.css'
 
 export type WhiteboardShape = {
   id: string
@@ -15,12 +36,16 @@ export type WhiteboardShape = {
   color?: string
 }
 
+type Tool = 'select' | 'pan' | 'rect' | 'circle' | 'text' | 'sticky'
+
 export function WhiteboardEditor() {
   const { docId } = useParams<{ docId: string }>()
+  const navigate = useNavigate()
   const doc = useYDoc(docId!, 'whiteboard')
   const shapes = useYArray<WhiteboardShape>(doc, 'shapes')
   const yShapes = doc.getArray('shapes')
-  const [tool, setTool] = useState<'select' | 'rect' | 'circle' | 'text' | 'sticky'>('rect')
+  const [tool, setTool] = useState<Tool>('rect')
+  const [zoom, setZoom] = useState(100)
   const containerRef = useRef<HTMLDivElement>(null)
 
   const addShape = useCallback(
@@ -45,67 +70,209 @@ export function WhiteboardEditor() {
     yShapes.delete(index, 1)
   }
 
+  const canvasClass = ['whiteboard-canvas']
+  if (tool === 'select') canvasClass.push('tool-select')
+  if (tool === 'pan') canvasClass.push('tool-pan')
+
   return (
-    <EditorLayout
-      title="Whiteboard"
-      toolbar={
-        <ButtonGroup>
-          <Picker
-            label="Tool"
-            selectedKey={tool}
-            onSelectionChange={(k) => setTool(k as typeof tool)}
+    <div className="whiteboard-editor">
+      {/* Miro-style top bar */}
+      <header className="whiteboard-topbar">
+        <div className="whiteboard-topbar-left">
+          <button
+            type="button"
+            className="whiteboard-topbar-btn"
+            onClick={() => navigate('/')}
+            aria-label="Menu"
           >
-            <Item key="select">Select</Item>
-            <Item key="rect">Rectangle</Item>
-            <Item key="circle">Circle</Item>
-            <Item key="text">Text</Item>
-            <Item key="sticky">Sticky</Item>
-          </Picker>
-          <Button variant="accent" onPress={() => window.print()}>
-            Export
-          </Button>
-        </ButtonGroup>
-      }
-    >
-      <Flex flex={1} UNSAFE_style={{ overflow: 'hidden' }}>
-        <div
-          ref={containerRef}
-          onClick={handleCanvasClick}
-          style={{
-            flex: 1,
-            background: 'repeating-conic-gradient(#f0f0f0 0% 25%, #fff 0% 50%) 50% / 20px 20px',
-            position: 'relative',
-            minHeight: 400,
-          }}
-        >
-          {shapes.map((s, i) => (
-            <div
-              key={s.id}
-              onClick={(e) => {
-                e.stopPropagation()
-                if (tool === 'select') removeShape(i)
-              }}
-              style={{
-                position: 'absolute',
-                left: s.x,
-                top: s.y,
-                width: s.w,
-                height: s.h,
-                backgroundColor: s.color ?? '#e0e0e0',
-                border: '2px solid #333',
-                borderRadius: s.type === 'circle' ? '50%' : 4,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontSize: 14,
-                cursor: 'pointer',
-              }}
-            >
-              {s.text ?? s.type}
-            </div>
-          ))}
+            <Menu size="S" />
+          </button>
+          <span style={{ fontWeight: 600, color: '#172b4d', fontSize: 18 }}>ForgeMob</span>
+          <h1 className="whiteboard-title">Whiteboard</h1>
+          <span className="whiteboard-doc-id">Doc: {docId}</span>
+          <button type="button" className="whiteboard-topbar-btn" aria-label="More options">
+            <MoreVertical size="S" />
+          </button>
         </div>
-      </Flex>
-    </EditorLayout>
+        <div className="whiteboard-topbar-right">
+          <button type="button" className="whiteboard-topbar-btn" aria-label="Sync">
+            <Sync size="S" />
+          </button>
+          <button type="button" className="whiteboard-topbar-btn" aria-label="Chat">
+            <Chat size="S" />
+          </button>
+          <button type="button" className="whiteboard-topbar-btn" aria-label="Video">
+            <VideoFilled size="S" />
+          </button>
+          <button type="button" className="whiteboard-topbar-btn" aria-label="Participants">
+            <UserGroup size="S" />
+          </button>
+          <button type="button" className="whiteboard-topbar-btn" aria-label="Present">
+            <Play size="S" />
+          </button>
+          <button type="button" className="whiteboard-topbar-btn share" aria-label="Share">
+            <VisitShare size="S" />
+            <span style={{ marginLeft: 6 }}>Share</span>
+          </button>
+        </div>
+      </header>
+
+      <div className="whiteboard-body">
+        {/* Left vertical toolbar – Miro-style */}
+        <aside className="whiteboard-toolbar">
+          <div className="whiteboard-toolbar-section">
+            <button
+              type="button"
+              className={`whiteboard-toolbar-btn ${tool === 'select' ? 'active' : ''}`}
+              onClick={() => setTool('select')}
+              aria-label="Select"
+              title="Select"
+            >
+              <Edit size="S" />
+            </button>
+            <button
+              type="button"
+              className={`whiteboard-toolbar-btn ${tool === 'pan' ? 'active' : ''}`}
+              onClick={() => setTool('pan')}
+              aria-label="Pan"
+              title="Pan"
+            >
+              <Hand size="S" />
+            </button>
+          </div>
+          <div className="whiteboard-toolbar-section">
+            <button
+              type="button"
+              className={`whiteboard-toolbar-btn ${tool === 'sticky' ? 'active' : ''}`}
+              onClick={() => setTool('sticky')}
+              aria-label="Sticky note"
+              title="Sticky note"
+            >
+              <Note size="S" />
+            </button>
+            <button
+              type="button"
+              className={`whiteboard-toolbar-btn ${tool === 'text' ? 'active' : ''}`}
+              onClick={() => setTool('text')}
+              aria-label="Text"
+              title="Text"
+            >
+              <Type size="S" />
+            </button>
+            <button
+              type="button"
+              className={`whiteboard-toolbar-btn ${tool === 'rect' ? 'active' : ''}`}
+              onClick={() => setTool('rect')}
+              aria-label="Shapes"
+              title="Rectangle"
+            >
+              <Rectangle size="S" />
+            </button>
+            <button
+              type="button"
+              className={`whiteboard-toolbar-btn ${tool === 'circle' ? 'active' : ''}`}
+              onClick={() => setTool('circle')}
+              aria-label="Circle"
+              title="Circle"
+            >
+              <Circle size="S" />
+            </button>
+            <button type="button" className="whiteboard-toolbar-btn" aria-label="Draw" title="Draw">
+              <Draw size="S" />
+            </button>
+            <button type="button" className="whiteboard-toolbar-btn" aria-label="Connector" title="Connector">
+              <Link size="S" />
+            </button>
+          </div>
+          <div className="whiteboard-toolbar-section">
+            <button type="button" className="whiteboard-toolbar-btn" aria-label="Frame" title="Frame">
+              <Table size="S" />
+            </button>
+            <button type="button" className="whiteboard-toolbar-btn" aria-label="Comment" title="Comment">
+              <Comment size="S" />
+            </button>
+            <button type="button" className="whiteboard-toolbar-btn" aria-label="Upload" title="Upload">
+              <UploadToCloud size="S" />
+            </button>
+            <button type="button" className="whiteboard-toolbar-btn" aria-label="More tools" title="More">
+              <Add size="S" />
+            </button>
+          </div>
+          <div className="whiteboard-toolbar-spacer" />
+          <div className="whiteboard-toolbar-section">
+            <button type="button" className="whiteboard-toolbar-btn" aria-label="Undo" title="Undo">
+              <Undo size="S" />
+            </button>
+            <button type="button" className="whiteboard-toolbar-btn" aria-label="Redo" title="Redo">
+              <Redo size="S" />
+            </button>
+          </div>
+        </aside>
+
+        {/* Canvas */}
+        <div className="whiteboard-canvas-wrap">
+          <div
+            ref={containerRef}
+            className={canvasClass.join(' ')}
+            onClick={handleCanvasClick}
+            style={{ transform: `scale(${zoom / 100})`, transformOrigin: '0 0' }}
+          >
+            {shapes.map((s, i) => (
+              <div
+                key={s.id}
+                role="button"
+                tabIndex={0}
+                onClick={(e) => {
+                  e.stopPropagation()
+                  if (tool === 'select') removeShape(i)
+                }}
+                onKeyDown={(e) => {
+                  if (tool === 'select' && (e.key === 'Delete' || e.key === 'Backspace')) {
+                    e.preventDefault()
+                    removeShape(i)
+                  }
+                }}
+                style={{
+                  position: 'absolute',
+                  left: s.x,
+                  top: s.y,
+                  width: s.w,
+                  height: s.h,
+                  backgroundColor: s.color ?? '#e0e0e0',
+                  border: '2px solid #333',
+                  borderRadius: s.type === 'circle' ? '50%' : 4,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: 14,
+                  cursor: 'pointer',
+                }}
+              >
+                {s.text ?? s.type}
+              </div>
+            ))}
+          </div>
+          <div className="whiteboard-status">
+            <button
+              type="button"
+              className="whiteboard-zoom-btn"
+              onClick={() => setZoom((z) => Math.max(25, z - 25))}
+              aria-label="Zoom out"
+            >
+              −
+            </button>
+            <span>{zoom}%</span>
+            <button
+              type="button"
+              className="whiteboard-zoom-btn"
+              onClick={() => setZoom((z) => Math.min(200, z + 25))}
+              aria-label="Zoom in"
+            >
+              +
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
   )
 }
