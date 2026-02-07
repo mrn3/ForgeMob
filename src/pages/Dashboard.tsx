@@ -84,7 +84,7 @@ export function Dashboard() {
 
       <main className="main">
         <section className="hero">
-          <h1 className="hero-title">What will you design today?</h1>
+          <h1 className="hero-title">What will you create today?</h1>
           <button type="button" className="hero-cta">
             Start creating — free
           </button>

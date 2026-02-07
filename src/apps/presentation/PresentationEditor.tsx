@@ -4,10 +4,12 @@ import { useCallback, useState, useEffect, useRef } from 'react'
 import PptxGenJS from 'pptxgenjs'
 import html2pdf from 'html2pdf.js'
 import type { Slide } from './types'
+import { TEMPLATES, TEMPLATE_CATEGORIES, type Template } from './templates'
 import './PresentationEditor.css'
 
 const SLIDE_WIDTH = 720
 const SLIDE_HEIGHT = 405
+const RECENT_TEMPLATES_MAX = 6
 
 const PRESET_COLORS = [
   '#1a1a2e',
@@ -19,12 +21,37 @@ const PRESET_COLORS = [
   '#40916c',
 ]
 
-const TEMPLATES = [
-  { id: 'title', name: 'Title', bg: '#1a1a2e', title: 'Title Slide', content: 'Click to edit' },
-  { id: 'content', name: 'Content', bg: '#16213e', title: 'Content', content: 'Add your content here' },
-  { id: 'pitch', name: 'Pitch', bg: '#0f3460', title: 'Pitch', content: 'Your key points' },
-  { id: 'creative', name: 'Creative', bg: '#533483', title: 'Creative', content: 'Ideas and inspiration' },
-]
+/** Nav rail icon: Design (palette) */
+function IconDesign() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <rect x="3" y="3" width="7" height="7" rx="1" />
+      <rect x="14" y="3" width="7" height="7" rx="1" />
+      <rect x="3" y="14" width="7" height="7" rx="1" />
+      <rect x="14" y="14" width="7" height="7" rx="1" />
+    </svg>
+  )
+}
+/** Nav rail icon: Elements (shapes) */
+function IconElements() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <circle cx="12" cy="12" r="3" />
+      <path d="M12 2v2M12 20v2M2 12h2M20 12h2" />
+      <path d="M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" />
+    </svg>
+  )
+}
+/** Nav rail icon: Text */
+function IconText() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <path d="M4 7V4h16v3" />
+      <path d="M9 20h6" />
+      <path d="M12 4v16" />
+    </svg>
+  )
+}
 
 function initSlides(): Slide[] {
   return [
@@ -105,7 +132,15 @@ function PresentationEditorContent({
   const [exporting, setExporting] = useState<'idle' | 'pdf' | 'pptx'>('idle')
   const [sidebarTab, setSidebarTab] = useState<'design' | 'elements' | 'text'>('design')
   const [shareOpen, setShareOpen] = useState(false)
+  const [recentlyUsed, setRecentlyUsed] = useState<string[]>([])
   const current = slidesList[currentIndex]
+
+  const addToRecentlyUsed = useCallback((templateId: string) => {
+    setRecentlyUsed((prev) => {
+      const next = [templateId, ...prev.filter((id) => id !== templateId)].slice(0, RECENT_TEMPLATES_MAX)
+      return next
+    })
+  }, [])
 
   const addSlide = useCallback(() => {
     const id = String(Date.now())
@@ -114,18 +149,36 @@ function PresentationEditorContent({
   }, [ySlides])
 
   const applyTemplate = useCallback(
-    (t: (typeof TEMPLATES)[number]) => {
-      if (!current) return
-      const updated: Slide = {
-        ...current,
+    (t: Template, toAll: boolean) => {
+      const slidePayload = (s: Slide): Slide => ({
+        ...s,
         bg: t.bg,
-        title: t.title,
-        content: t.content,
+        ...(t.textColor !== undefined ? { textColor: t.textColor } : {}),
+      })
+      if (toAll) {
+        slidesList.forEach((s, i) => {
+          const updated = slidePayload(s)
+          if (i === 0) {
+            updated.title = t.title
+            updated.content = t.content
+          }
+          ySlides.delete(i, 1)
+          ySlides.insert(i, [updated])
+        })
+      } else if (current) {
+        const updated: Slide = {
+          ...current,
+          bg: t.bg,
+          title: t.title,
+          content: t.content,
+          ...(t.textColor !== undefined ? { textColor: t.textColor } : {}),
+        }
+        ySlides.delete(currentIndex, 1)
+        ySlides.insert(currentIndex, [updated])
       }
-      ySlides.delete(currentIndex, 1)
-      ySlides.insert(currentIndex, [updated])
+      addToRecentlyUsed(t.id)
     },
-    [current, currentIndex, ySlides]
+    [current, currentIndex, ySlides, slidesList, addToRecentlyUsed]
   )
 
   const updateSlide = useCallback(
@@ -149,12 +202,17 @@ function PresentationEditorContent({
     container.style.width = `${SLIDE_WIDTH}px`
     document.body.appendChild(container)
 
+    const isGradient = (c: string) => typeof c === 'string' && c.startsWith('linear-gradient')
     slidesList.forEach((slide, i) => {
       const page = document.createElement('div')
       page.style.width = `${SLIDE_WIDTH}px`
       page.style.height = `${SLIDE_HEIGHT}px`
-      page.style.backgroundColor = slide.bg
-      page.style.color = '#fff'
+      if (isGradient(slide.bg)) {
+        page.style.background = slide.bg
+      } else {
+        page.style.backgroundColor = slide.bg
+      }
+      page.style.color = slide.textColor ?? '#fff'
       page.style.padding = '24px'
       page.style.boxSizing = 'border-box'
       page.style.display = 'flex'
@@ -193,9 +251,19 @@ function PresentationEditorContent({
       pptx.layout = 'LAYOUT_16x9'
       pptx.title = 'ForgeMob Presentation'
 
+      const solidColor = (bg: string) => {
+        if (bg.startsWith('linear-gradient')) {
+          const match = bg.match(/#[0-9a-fA-F]{6}/)
+          return match ? match[0] : '#16213e'
+        }
+        return bg
+      }
+      const toPptxHex = (hex: string) => (hex.startsWith('#') ? hex.slice(1) : hex)
       for (const slide of slidesList) {
         const slideConfig = pptx.addSlide()
-        slideConfig.background = { color: slide.bg }
+        const bg = solidColor(slide.bg)
+        slideConfig.background = { color: bg.startsWith('#') ? bg.slice(1) : bg }
+        const textHex = toPptxHex(slide.textColor ?? '#FFFFFF')
         slideConfig.addText(slide.title, {
           x: 0.5,
           y: 1,
@@ -203,7 +271,7 @@ function PresentationEditorContent({
           h: 1,
           fontSize: 28,
           bold: true,
-          color: 'FFFFFF',
+          color: textHex,
           align: 'center',
         })
         slideConfig.addText(slide.content, {
@@ -212,7 +280,7 @@ function PresentationEditorContent({
           w: 9,
           h: 3,
           fontSize: 18,
-          color: 'FFFFFF',
+          color: textHex,
           align: 'center',
           valign: 'middle',
         })
@@ -280,82 +348,194 @@ function PresentationEditorContent({
       </header>
 
       <div className="presentation-editor__body">
-        {/* Left sidebar - Canva style */}
+        {/* Canva-style left sidebar: nav rail + expanded panel */}
         <aside className="presentation-editor__sidebar">
-          <div className="presentation-editor__sidebar-tabs">
+          <nav className="presentation-editor__rail" aria-label="Editor tools">
             <button
               type="button"
-              className={`presentation-editor__sidebar-tab ${sidebarTab === 'design' ? 'active' : ''}`}
+              className={`presentation-editor__rail-btn ${sidebarTab === 'design' ? 'active' : ''}`}
               onClick={() => setSidebarTab('design')}
+              title="Design"
+              aria-label="Design"
             >
-              Design
+              <IconDesign />
+              <span>Design</span>
             </button>
             <button
               type="button"
-              className={`presentation-editor__sidebar-tab ${sidebarTab === 'elements' ? 'active' : ''}`}
+              className={`presentation-editor__rail-btn ${sidebarTab === 'elements' ? 'active' : ''}`}
               onClick={() => setSidebarTab('elements')}
+              title="Elements"
+              aria-label="Elements"
             >
-              Elements
+              <IconElements />
+              <span>Elements</span>
             </button>
             <button
               type="button"
-              className={`presentation-editor__sidebar-tab ${sidebarTab === 'text' ? 'active' : ''}`}
+              className={`presentation-editor__rail-btn ${sidebarTab === 'text' ? 'active' : ''}`}
               onClick={() => setSidebarTab('text')}
+              title="Text"
+              aria-label="Text"
             >
-              Text
+              <IconText />
+              <span>Text</span>
             </button>
-          </div>
-          <div className="presentation-editor__sidebar-panel">
-            {sidebarTab === 'design' && (
-              <>
-                <p className="presentation-editor__design-label">Templates</p>
-                <div className="presentation-editor__template-grid">
-                  {TEMPLATES.map((t) => (
-                    <button
-                      key={t.id}
-                      type="button"
-                      className="presentation-editor__template-card"
-                      style={{ background: t.bg }}
-                      onClick={() => applyTemplate(t)}
-                      title={t.name}
-                    >
-                      {t.name}
-                    </button>
-                  ))}
-                </div>
-                <p className="presentation-editor__design-label" style={{ marginTop: 16 }}>
-                  Slides
+          </nav>
+          <div className="presentation-editor__panel">
+            <div className="presentation-editor__sidebar-tabs">
+              <button
+                type="button"
+                className={`presentation-editor__sidebar-tab ${sidebarTab === 'design' ? 'active' : ''}`}
+                onClick={() => setSidebarTab('design')}
+              >
+                Templates
+              </button>
+              <button
+                type="button"
+                className={`presentation-editor__sidebar-tab ${sidebarTab === 'elements' ? 'active' : ''}`}
+                onClick={() => setSidebarTab('elements')}
+              >
+                Layouts
+              </button>
+              <button
+                type="button"
+                className={`presentation-editor__sidebar-tab ${sidebarTab === 'text' ? 'active' : ''}`}
+                onClick={() => setSidebarTab('text')}
+              >
+                Styles
+              </button>
+            </div>
+            <div className="presentation-editor__sidebar-panel">
+              {sidebarTab === 'design' && (
+                <>
+                  <p className="presentation-editor__design-hint">
+                    Choose a template to apply to the current slide or the whole presentation.
+                  </p>
+                  {recentlyUsed.length > 0 && (
+                    <>
+                      <p className="presentation-editor__design-label">Recently used</p>
+                      <div className="presentation-editor__template-grid">
+                        {recentlyUsed
+                          .map((id) => TEMPLATES.find((t) => t.id === id))
+                          .filter((t): t is Template => t != null)
+                          .map((t) => (
+                            <div
+                              key={t.id}
+                              className="presentation-editor__template-card"
+                              style={{ background: t.bg, color: t.textColor ?? '#fff' }}
+                              title={t.name}
+                              onClick={() => applyTemplate(t, false)}
+                              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); applyTemplate(t, false) } }}
+                              role="button"
+                              tabIndex={0}
+                            >
+                              <span className="presentation-editor__template-card-name">{t.name}</span>
+                              <span className="presentation-editor__template-card-actions">
+                                <button
+                                  type="button"
+                                  className="presentation-editor__template-apply"
+                                  onClick={(e) => { e.stopPropagation(); applyTemplate(t, false) }}
+                                  title="Apply to current slide"
+                                >
+                                  Slide
+                                </button>
+                                <button
+                                  type="button"
+                                  className="presentation-editor__template-apply"
+                                  onClick={(e) => { e.stopPropagation(); applyTemplate(t, true) }}
+                                  title="Apply to all slides"
+                                >
+                                  All
+                                </button>
+                              </span>
+                            </div>
+                          ))}
+                      </div>
+                    </>
+                  )}
+                  <p className="presentation-editor__design-label">
+                    {recentlyUsed.length > 0 ? 'All templates' : 'Templates'}
+                  </p>
+                  <div className="presentation-editor__template-scroll">
+                    {TEMPLATE_CATEGORIES.filter((c) => c !== 'Recently used').map((category) => {
+                      const items = TEMPLATES.filter((t) => t.category === category)
+                      if (items.length === 0) return null
+                      return (
+                        <div key={category} className="presentation-editor__template-section">
+                          <p className="presentation-editor__design-label">{category}</p>
+                          <div className="presentation-editor__template-grid">
+                            {items.map((t) => (
+                              <div
+                                key={t.id}
+                                className="presentation-editor__template-card"
+                                style={{ background: t.bg, color: t.textColor ?? '#fff' }}
+                                title={t.name}
+                                onClick={() => applyTemplate(t, false)}
+                                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); applyTemplate(t, false) } }}
+                                role="button"
+                                tabIndex={0}
+                              >
+                              <span className="presentation-editor__template-card-name">{t.name}</span>
+                              <span className="presentation-editor__template-card-actions">
+                                <button
+                                  type="button"
+                                  className="presentation-editor__template-apply"
+                                  onClick={(e) => { e.stopPropagation(); applyTemplate(t, false) }}
+                                  title="Apply to current slide"
+                                >
+                                  Slide
+                                </button>
+                                <button
+                                  type="button"
+                                  className="presentation-editor__template-apply"
+                                  onClick={(e) => { e.stopPropagation(); applyTemplate(t, true) }}
+                                  title="Apply to all slides"
+                                >
+                                  All
+                                </button>
+                              </span>
+                            </div>
+                          ))}
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
+                  <p className="presentation-editor__design-label" style={{ marginTop: 16 }}>
+                    Slides
+                  </p>
+                  <div className="presentation-editor__slides-list">
+                    {slidesList.map((s, i) => (
+                      <button
+                        key={s.id}
+                        type="button"
+                        className={`presentation-editor__slide-thumb ${i === currentIndex ? 'active' : ''}`}
+                        onClick={() => setCurrentIndex(i)}
+                      >
+                        <span
+                          className="presentation-editor__slide-thumb-preview"
+                          style={s.bg.startsWith('linear-gradient') ? { background: s.bg } : { backgroundColor: s.bg }}
+                        />
+                        <span className="presentation-editor__slide-thumb-title">
+                          {s.title || `Slide ${i + 1}`}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                </>
+              )}
+              {sidebarTab === 'elements' && (
+                <p className="presentation-editor__design-label">
+                  Shapes, lines, icons — coming soon
                 </p>
-                <div className="presentation-editor__slides-list">
-                  {slidesList.map((s, i) => (
-                    <button
-                      key={s.id}
-                      type="button"
-                      className={`presentation-editor__slide-thumb ${i === currentIndex ? 'active' : ''}`}
-                      onClick={() => setCurrentIndex(i)}
-                    >
-                      <span
-                        className="presentation-editor__slide-thumb-preview"
-                        style={{ background: s.bg }}
-                      />
-                      <span className="presentation-editor__slide-thumb-title">
-                        {s.title || `Slide ${i + 1}`}
-                      </span>
-                    </button>
-                  ))}
-                </div>
-              </>
-            )}
-            {sidebarTab === 'elements' && (
-              <p className="presentation-editor__design-label">
-                Shapes, lines, icons — coming soon
-              </p>
-            )}
-            {sidebarTab === 'text' && (
-              <p className="presentation-editor__design-label">
-                Add headings, body text — use the canvas to edit
-              </p>
-            )}
+              )}
+              {sidebarTab === 'text' && (
+                <p className="presentation-editor__design-label">
+                  Add headings, body text — use the canvas to edit
+                </p>
+              )}
+            </div>
           </div>
         </aside>
 
@@ -385,7 +565,11 @@ function PresentationEditorContent({
               </div>
               <div
                 className="presentation-editor__canvas"
-                style={{ backgroundColor: current.bg }}
+                style={
+                  current.bg.startsWith('linear-gradient')
+                    ? { background: current.bg, color: current.textColor ?? '#fff' }
+                    : { backgroundColor: current.bg, color: current.textColor ?? '#fff' }
+                }
               >
                 <input
                   className="presentation-editor__canvas-title"

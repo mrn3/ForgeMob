@@ -20,7 +20,7 @@ describe('Dashboard', () => {
       </AppWrapper>
     )
     expect(screen.getByText('ForgeMob')).toBeInTheDocument()
-    expect(screen.getByText('What will you design today?')).toBeInTheDocument()
+    expect(screen.getByText('What will you create today?')).toBeInTheDocument()
     // App names appear in explore cards and/or main grid
     expect(screen.getAllByText('Presentations').length).toBeGreaterThanOrEqual(1)
     expect(screen.getAllByText('Social Media').length).toBeGreaterThanOrEqual(1)
