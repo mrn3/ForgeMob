@@ -15,7 +15,6 @@ import Note from '@spectrum-icons/workflow/Note'
 import Type from '@spectrum-icons/workflow/Type'
 import Rectangle from '@spectrum-icons/workflow/Rectangle'
 import Circle from '@spectrum-icons/workflow/Circle'
-import Draw from '@spectrum-icons/workflow/Draw'
 import Link from '@spectrum-icons/workflow/Link'
 import Table from '@spectrum-icons/workflow/Table'
 import Comment from '@spectrum-icons/workflow/Comment'
@@ -176,9 +175,6 @@ export function WhiteboardEditor() {
               title="Circle"
             >
               <Circle size="S" />
-            </button>
-            <button type="button" className="whiteboard-toolbar-btn" aria-label="Draw" title="Draw">
-              <Draw size="S" />
             </button>
             <button type="button" className="whiteboard-toolbar-btn" aria-label="Connector" title="Connector">
               <Link size="S" />
