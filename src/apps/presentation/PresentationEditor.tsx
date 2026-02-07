@@ -21,6 +21,39 @@ const PRESET_COLORS = [
   '#40916c',
 ]
 
+/** Style for a template card or slide with optional Canva-style background image */
+function templateCardStyle(t: { bg: string; bgImage?: string; textColor?: string }) {
+  const color = t.textColor ?? '#fff'
+  if (t.bgImage) {
+    return {
+      backgroundImage: `url(${t.bgImage})`,
+      backgroundSize: 'cover',
+      backgroundPosition: 'center',
+      backgroundColor: t.bg,
+      color,
+    }
+  }
+  return { background: t.bg, color }
+}
+
+/** Style for the main slide canvas (supports bgImage like Canva) */
+function slideCanvasStyle(s: Slide) {
+  const color = s.textColor ?? '#fff'
+  if (s.bgImage) {
+    return {
+      backgroundImage: `url(${s.bgImage})`,
+      backgroundSize: 'cover',
+      backgroundPosition: 'center',
+      backgroundColor: s.bg,
+      color,
+    }
+  }
+  if (s.bg.startsWith('linear-gradient')) {
+    return { background: s.bg, color }
+  }
+  return { backgroundColor: s.bg, color }
+}
+
 /** Nav rail icon: Design (palette) */
 function IconDesign() {
   return (
@@ -153,6 +186,7 @@ function PresentationEditorContent({
       const slidePayload = (s: Slide): Slide => ({
         ...s,
         bg: t.bg,
+        ...(t.bgImage !== undefined ? { bgImage: t.bgImage } : { bgImage: undefined }),
         ...(t.textColor !== undefined ? { textColor: t.textColor } : {}),
       })
       if (toAll) {
@@ -171,6 +205,7 @@ function PresentationEditorContent({
           bg: t.bg,
           title: t.title,
           content: t.content,
+          ...(t.bgImage !== undefined ? { bgImage: t.bgImage } : { bgImage: undefined }),
           ...(t.textColor !== undefined ? { textColor: t.textColor } : {}),
         }
         ySlides.delete(currentIndex, 1)
@@ -207,7 +242,12 @@ function PresentationEditorContent({
       const page = document.createElement('div')
       page.style.width = `${SLIDE_WIDTH}px`
       page.style.height = `${SLIDE_HEIGHT}px`
-      if (isGradient(slide.bg)) {
+      if (slide.bgImage) {
+        page.style.backgroundImage = `url(${slide.bgImage})`
+        page.style.backgroundSize = 'cover'
+        page.style.backgroundPosition = 'center'
+        page.style.backgroundColor = slide.bg
+      } else if (isGradient(slide.bg)) {
         page.style.background = slide.bg
       } else {
         page.style.backgroundColor = slide.bg
@@ -423,7 +463,7 @@ function PresentationEditorContent({
                             <div
                               key={t.id}
                               className="presentation-editor__template-card"
-                              style={{ background: t.bg, color: t.textColor ?? '#fff' }}
+                              style={templateCardStyle(t)}
                               title={t.name}
                               onClick={() => applyTemplate(t, false)}
                               onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); applyTemplate(t, false) } }}
@@ -469,7 +509,7 @@ function PresentationEditorContent({
                               <div
                                 key={t.id}
                                 className="presentation-editor__template-card"
-                                style={{ background: t.bg, color: t.textColor ?? '#fff' }}
+                                style={templateCardStyle(t)}
                                 title={t.name}
                                 onClick={() => applyTemplate(t, false)}
                                 onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); applyTemplate(t, false) } }}
@@ -515,7 +555,13 @@ function PresentationEditorContent({
                       >
                         <span
                           className="presentation-editor__slide-thumb-preview"
-                          style={s.bg.startsWith('linear-gradient') ? { background: s.bg } : { backgroundColor: s.bg }}
+                          style={
+                            s.bgImage
+                              ? { backgroundImage: `url(${s.bgImage})`, backgroundSize: 'cover', backgroundPosition: 'center', backgroundColor: s.bg }
+                              : s.bg.startsWith('linear-gradient')
+                                ? { background: s.bg }
+                                : { backgroundColor: s.bg }
+                          }
                         />
                         <span className="presentation-editor__slide-thumb-title">
                           {s.title || `Slide ${i + 1}`}
@@ -552,24 +598,20 @@ function PresentationEditorContent({
                     className={`presentation-editor__color-swatch ${current.bg === color ? 'active' : ''}`}
                     style={{ backgroundColor: color }}
                     title={color}
-                    onClick={() => updateSlide(currentIndex, { bg: color })}
+                    onClick={() => updateSlide(currentIndex, { bg: color, bgImage: undefined })}
                   />
                 ))}
                 <input
                   type="color"
                   className="presentation-editor__color-picker"
                   value={current.bg}
-                  onChange={(e) => updateSlide(currentIndex, { bg: e.target.value })}
+                  onChange={(e) => updateSlide(currentIndex, { bg: e.target.value, bgImage: undefined })}
                   title="Custom color"
                 />
               </div>
               <div
                 className="presentation-editor__canvas"
-                style={
-                  current.bg.startsWith('linear-gradient')
-                    ? { background: current.bg, color: current.textColor ?? '#fff' }
-                    : { backgroundColor: current.bg, color: current.textColor ?? '#fff' }
-                }
+                style={slideCanvasStyle(current)}
               >
                 <input
                   className="presentation-editor__canvas-title"

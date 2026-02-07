@@ -257,6 +257,10 @@
   font-weight: 600;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
   transition: border-color 0.15s, transform 0.1s, box-shadow 0.15s;
+  overflow: hidden;
+  min-height: 0;
+  /* Ensure background image is visible and fills the card */
+  background-repeat: no-repeat;
 }
 
 .presentation-editor__template-card:focus {
