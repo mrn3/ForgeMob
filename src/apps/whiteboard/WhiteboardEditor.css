@@ -169,6 +169,30 @@
   cursor: grabbing;
 }
 
+/* Inline edit for note/text shapes */
+.whiteboard-shape-edit {
+  position: absolute;
+  inset: 4px;
+  width: calc(100% - 8px);
+  height: calc(100% - 8px);
+  margin: 0;
+  padding: 4px 6px;
+  border: 1px solid rgba(0, 0, 0, 0.2);
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.95);
+  font-size: 14px;
+  font-family: inherit;
+  line-height: 1.3;
+  resize: none;
+  outline: none;
+  box-sizing: border-box;
+}
+
+.whiteboard-shape-edit:focus {
+  border-color: #026aa7;
+  box-shadow: 0 0 0 2px rgba(2, 106, 167, 0.2);
+}
+
 /* Bottom-right zoom/minimap strip (Miro-style) */
 .whiteboard-status {
   position: absolute;

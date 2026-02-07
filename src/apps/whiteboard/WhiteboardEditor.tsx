@@ -69,6 +69,19 @@ export function WhiteboardEditor() {
     yShapes.delete(index, 1)
   }
 
+  const updateShape = useCallback(
+    (index: number, updates: Partial<WhiteboardShape>) => {
+      const current = yShapes.get(index) as WhiteboardShape
+      if (!current) return
+      const next = { ...current, ...updates }
+      yShapes.delete(index, 1)
+      yShapes.insert(index, [next])
+    },
+    [yShapes]
+  )
+
+  const [editingShapeIndex, setEditingShapeIndex] = useState<number | null>(null)
+
   const canvasClass = ['whiteboard-canvas']
   if (tool === 'select') canvasClass.push('tool-select')
   if (tool === 'pan') canvasClass.push('tool-pan')
@@ -213,40 +226,66 @@ export function WhiteboardEditor() {
             onClick={handleCanvasClick}
             style={{ transform: `scale(${zoom / 100})`, transformOrigin: '0 0' }}
           >
-            {shapes.map((s, i) => (
-              <div
-                key={s.id}
-                role="button"
-                tabIndex={0}
-                onClick={(e) => {
-                  e.stopPropagation()
-                  if (tool === 'select') removeShape(i)
-                }}
-                onKeyDown={(e) => {
-                  if (tool === 'select' && (e.key === 'Delete' || e.key === 'Backspace')) {
-                    e.preventDefault()
-                    removeShape(i)
-                  }
-                }}
-                style={{
-                  position: 'absolute',
-                  left: s.x,
-                  top: s.y,
-                  width: s.w,
-                  height: s.h,
-                  backgroundColor: s.color ?? '#e0e0e0',
-                  border: '2px solid #333',
-                  borderRadius: s.type === 'circle' ? '50%' : 4,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontSize: 14,
-                  cursor: 'pointer',
-                }}
-              >
-                {s.text ?? s.type}
-              </div>
-            ))}
+            {shapes.map((s, i) => {
+              const isTextEditable = s.type === 'sticky' || s.type === 'text'
+              const isEditing = editingShapeIndex === i
+              return (
+                <div
+                  key={s.id}
+                  role="button"
+                  tabIndex={0}
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    /* Select tool: focus shape so user can press Delete to remove; do not delete on click so double-click can edit */
+                  }}
+                  onDoubleClick={(e) => {
+                    e.stopPropagation()
+                    if (tool === 'select' && isTextEditable) setEditingShapeIndex(i)
+                  }}
+                  onKeyDown={(e) => {
+                    if (tool === 'select' && (e.key === 'Delete' || e.key === 'Backspace')) {
+                      e.preventDefault()
+                      removeShape(i)
+                    }
+                  }}
+                  style={{
+                    position: 'absolute',
+                    left: s.x,
+                    top: s.y,
+                    width: s.w,
+                    height: s.h,
+                    backgroundColor: s.color ?? '#e0e0e0',
+                    border: '2px solid #333',
+                    borderRadius: s.type === 'circle' ? '50%' : 4,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: 14,
+                    cursor: 'pointer',
+                  }}
+                >
+                  {isEditing ? (
+                    <textarea
+                      className="whiteboard-shape-edit"
+                      value={s.text ?? ''}
+                      onChange={(e) => updateShape(i, { text: e.target.value })}
+                      onBlur={() => setEditingShapeIndex(null)}
+                      onKeyDown={(e) => {
+                        e.stopPropagation()
+                        if (e.key === 'Escape') {
+                          setEditingShapeIndex(null)
+                        }
+                      }}
+                      onClick={(e) => e.stopPropagation()}
+                      autoFocus
+                      aria-label="Edit note or text"
+                    />
+                  ) : (
+                    s.text ?? s.type
+                  )}
+                </div>
+              )
+            })}
           </div>
           <div className="whiteboard-status">
             <button
