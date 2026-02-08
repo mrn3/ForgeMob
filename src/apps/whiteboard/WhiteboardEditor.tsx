@@ -1,6 +1,6 @@
 import { useParams, useNavigate } from 'react-router-dom'
 import { useYDoc, useYArray } from '@/collab/useCollaboration'
-import { useCallback, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import Menu from '@spectrum-icons/workflow/Menu'
 import MoreVertical from '@spectrum-icons/workflow/MoreVertical'
 import Sync from '@spectrum-icons/workflow/Sync'
@@ -46,6 +46,11 @@ export function WhiteboardEditor() {
   const [tool, setTool] = useState<Tool>('rect')
   const [zoom, setZoom] = useState(100)
   const containerRef = useRef<HTMLDivElement>(null)
+  const [panOffset, setPanOffset] = useState({ x: 0, y: 0 })
+  const [isPanning, setIsPanning] = useState(false)
+  const panStartRef = useRef({ x: 0, y: 0 })
+  const [draggingShapeIndex, setDraggingShapeIndex] = useState<number | null>(null)
+  const dragStartRef = useRef({ clientX: 0, clientY: 0, shapeX: 0, shapeY: 0 })
 
   const addShape = useCallback(
     (shape: Omit<WhiteboardShape, 'id'>) => {
@@ -81,6 +86,76 @@ export function WhiteboardEditor() {
   )
 
   const [editingShapeIndex, setEditingShapeIndex] = useState<number | null>(null)
+
+  /* Pan (hand tool): global mouse move/up to update pan offset */
+  useEffect(() => {
+    if (!isPanning) return
+    const onMove = (e: MouseEvent) => {
+      setPanOffset((prev) => ({
+        x: prev.x + (e.clientX - panStartRef.current.x),
+        y: prev.y + (e.clientY - panStartRef.current.y),
+      }))
+      panStartRef.current = { x: e.clientX, y: e.clientY }
+    }
+    const onUp = () => setIsPanning(false)
+    window.addEventListener('mousemove', onMove)
+    window.addEventListener('mouseup', onUp)
+    return () => {
+      window.removeEventListener('mousemove', onMove)
+      window.removeEventListener('mouseup', onUp)
+    }
+  }, [isPanning])
+
+  /* Drag shape (select tool): global mouse move/up to update shape position */
+  useEffect(() => {
+    if (draggingShapeIndex === null) return
+    const onMove = (e: MouseEvent) => {
+      const scale = zoom / 100
+      const dx = (e.clientX - dragStartRef.current.clientX) / scale
+      const dy = (e.clientY - dragStartRef.current.clientY) / scale
+      updateShape(draggingShapeIndex, {
+        x: dragStartRef.current.shapeX + dx,
+        y: dragStartRef.current.shapeY + dy,
+      })
+      dragStartRef.current = {
+        clientX: e.clientX,
+        clientY: e.clientY,
+        shapeX: dragStartRef.current.shapeX + dx,
+        shapeY: dragStartRef.current.shapeY + dy,
+      }
+    }
+    const onUp = () => setDraggingShapeIndex(null)
+    window.addEventListener('mousemove', onMove)
+    window.addEventListener('mouseup', onUp)
+    return () => {
+      window.removeEventListener('mousemove', onMove)
+      window.removeEventListener('mouseup', onUp)
+    }
+  }, [draggingShapeIndex, updateShape, zoom])
+
+  const handleCanvasMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (tool === 'pan') {
+      e.preventDefault()
+      setIsPanning(true)
+      panStartRef.current = { x: e.clientX, y: e.clientY }
+    }
+  }
+
+  const handleShapeMouseDown = (e: React.MouseEvent, index: number) => {
+    e.stopPropagation()
+    if (tool === 'select') {
+      setDraggingShapeIndex(index)
+      const s = shapes[index]
+      if (s) {
+        dragStartRef.current = {
+          clientX: e.clientX,
+          clientY: e.clientY,
+          shapeX: s.x,
+          shapeY: s.y,
+        }
+      }
+    }
+  }
 
   const canvasClass = ['whiteboard-canvas']
   if (tool === 'select') canvasClass.push('tool-select')
@@ -224,7 +299,11 @@ export function WhiteboardEditor() {
             ref={containerRef}
             className={canvasClass.join(' ')}
             onClick={handleCanvasClick}
-            style={{ transform: `scale(${zoom / 100})`, transformOrigin: '0 0' }}
+            onMouseDown={handleCanvasMouseDown}
+            style={{
+              transform: `translate(${panOffset.x}px, ${panOffset.y}px) scale(${zoom / 100})`,
+              transformOrigin: '0 0',
+            }}
           >
             {shapes.map((s, i) => {
               const isTextEditable = s.type === 'sticky' || s.type === 'text'
@@ -234,6 +313,7 @@ export function WhiteboardEditor() {
                   key={s.id}
                   role="button"
                   tabIndex={0}
+                  onMouseDown={(e) => handleShapeMouseDown(e, i)}
                   onClick={(e) => {
                     e.stopPropagation()
                     /* Select tool: focus shape so user can press Delete to remove; do not delete on click so double-click can edit */
@@ -261,7 +341,8 @@ export function WhiteboardEditor() {
                     alignItems: 'center',
                     justifyContent: 'center',
                     fontSize: 14,
-                    cursor: 'pointer',
+                    cursor: tool === 'select' ? (draggingShapeIndex === i ? 'grabbing' : 'grab') : 'pointer',
+                    userSelect: 'none',
                   }}
                 >
                   {isEditing ? (

@@ -159,10 +159,12 @@
 
 .whiteboard-canvas.tool-select {
   cursor: default;
+  user-select: none;
 }
 
 .whiteboard-canvas.tool-pan {
   cursor: grab;
+  user-select: none;
 }
 
 .whiteboard-canvas.tool-pan:active {
