@@ -326,7 +326,7 @@ export function SheetsEditor() {
           className="sheets-grid"
           style={{
             gridTemplateColumns: `40px repeat(${COLS}, minmax(100px, 1fr))`,
-            gridTemplateRows: `28px repeat(${ROWS}, 26px)`,
+            gridTemplateRows: `32px repeat(${ROWS}, 26px)`,
           }}
         >
           <div className="sheets-corner" />
@@ -341,7 +341,8 @@ export function SheetsEditor() {
                 className={`sheets-col-header ${hasFilter ? 'has-filter' : ''}`}
                 style={{ minWidth: colWidth }}
               >
-                <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis' }}>{colDef.name}</span>
+                <span className="sheets-col-header-label">{colDef.name}</span>
+                <div className="sheets-col-header-actions">
                 <DialogTrigger
                   isOpen={filterOpenCol === c}
                   onOpenChange={(open) => setFilterOpenCol(open ? c : null)}
@@ -498,6 +499,7 @@ export function SheetsEditor() {
                     </Content>
                   </Dialog>
                 </DialogTrigger>
+                </div>
               </div>
             )
           })}

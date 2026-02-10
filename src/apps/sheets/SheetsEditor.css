@@ -11,13 +11,15 @@
   top: 0;
   left: 0;
   z-index: 12;
-  background: var(--spectrum-global-color-gray-300, #d4d4d8);
-  border-right: 1px solid #9ca3af;
-  border-bottom: 1px solid var(--spectrum-global-color-gray-400);
+  background: linear-gradient(180deg, #f1f1f2 0%, #e8e8ea 100%);
+  border-right: 1px solid rgba(0, 0, 0, 0.08);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.12);
   min-width: 40px;
-  min-height: 28px;
+  min-height: 32px;
+  box-shadow: 0 1px 0 0 rgba(255, 255, 255, 0.5) inset;
 }
 
+/* Column headers: clean, elevated look with grouped actions */
 .sheets-col-header {
   position: sticky;
   top: 0;
@@ -25,22 +27,80 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 4px;
-  padding: 4px 6px;
-  background: var(--spectrum-global-color-gray-100, #f4f4f5);
-  border-right: 1px solid #9ca3af;
-  border-bottom: 1px solid var(--spectrum-global-color-gray-400);
-  min-height: 28px;
+  gap: 8px;
+  padding: 0 8px;
+  min-height: 32px;
+  background: linear-gradient(180deg, #fafafa 0%, #f1f1f2 100%);
+  border-right: 1px solid rgba(0, 0, 0, 0.08);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.12);
   font-weight: 600;
   font-size: 12px;
+  letter-spacing: 0.02em;
+  color: #374151;
+  box-shadow: 0 1px 0 0 rgba(255, 255, 255, 0.6) inset;
 }
 
 .sheets-col-header:hover {
-  background: var(--spectrum-global-color-gray-200, #e4e4e7);
+  background: linear-gradient(180deg, #f5f5f6 0%, #ebebed 100%);
+}
+
+.sheets-col-header:hover .sheets-col-header-actions {
+  opacity: 1;
 }
 
 .sheets-col-header.has-filter {
-  background: var(--spectrum-global-color-blue-100, #dbeafe);
+  background: linear-gradient(180deg, #eff6ff 0%, #dbeafe 100%);
+  color: #1e40af;
+  box-shadow: 0 1px 0 0 rgba(255, 255, 255, 0.8) inset;
+}
+
+.sheets-col-header.has-filter:hover {
+  background: linear-gradient(180deg, #dbeafe 0%, #bfdbfe 100%);
+}
+
+.sheets-col-header-label {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sheets-col-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  flex-shrink: 0;
+  opacity: 0.7;
+  transition: opacity 0.15s ease;
+}
+
+.sheets-col-header-actions [class*="ActionButton"] {
+  --spectrum-actionbutton-background-color: transparent;
+  --spectrum-actionbutton-background-color-hover: rgba(0, 0, 0, 0.06);
+  --spectrum-actionbutton-background-color-down: rgba(0, 0, 0, 0.1);
+  padding: 4px;
+  border-radius: 4px;
+  min-width: 24px;
+  height: 24px;
+}
+
+.sheets-col-header-actions [class*="ActionButton"] svg {
+  width: 14px;
+  height: 14px;
+  color: #6b7280;
+}
+
+.sheets-col-header.has-filter .sheets-col-header-actions [class*="ActionButton"] svg {
+  color: #2563eb;
+}
+
+.sheets-col-header-actions [class*="ActionButton"]:hover svg {
+  color: #374151;
+}
+
+.sheets-col-header.has-filter .sheets-col-header-actions [class*="ActionButton"]:hover svg {
+  color: #1d4ed8;
 }
 
 .sheets-row-header {
