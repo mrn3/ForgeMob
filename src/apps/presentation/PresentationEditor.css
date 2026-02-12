@@ -210,6 +210,60 @@
   line-height: 1.4;
 }
 
+/* Generate with AI block */
+.presentation-editor__ai-generate {
+  padding: 12px 0;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+  margin-bottom: 12px;
+}
+.presentation-editor__ai-hint {
+  margin-bottom: 8px !important;
+}
+.presentation-editor__ai-input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 10px 12px;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: 8px;
+  font-size: 13px;
+  font-family: inherit;
+  resize: vertical;
+  min-height: 56px;
+  margin-bottom: 10px;
+}
+.presentation-editor__ai-input:focus {
+  outline: none;
+  border-color: var(--canva-accent);
+  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
+}
+.presentation-editor__ai-input::placeholder {
+  color: #9ca3af;
+}
+.presentation-editor__ai-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--canva-text-muted);
+  margin-bottom: 10px;
+  cursor: pointer;
+}
+.presentation-editor__ai-checkbox input {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--canva-accent);
+}
+.presentation-editor__ai-btn {
+  width: 100%;
+  margin-bottom: 4px;
+}
+.presentation-editor__ai-error {
+  font-size: 12px;
+  color: #dc2626;
+  margin: 8px 0 0 0;
+  line-height: 1.4;
+}
+
 /* Design panel: templates */
 .presentation-editor__design-label {
   font-size: 11px;

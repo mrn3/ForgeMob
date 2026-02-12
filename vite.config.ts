@@ -18,6 +18,7 @@ export default defineConfig({
     port: 5173,
     proxy: {
       '/ws': { target: 'ws://localhost:1234', ws: true },
+      '/api/ollama': { target: 'http://localhost:11434', changeOrigin: true },
     },
   },
 })

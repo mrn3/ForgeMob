@@ -5,6 +5,7 @@ import PptxGenJS from 'pptxgenjs'
 import html2pdf from 'html2pdf.js'
 import type { Slide } from './types'
 import { TEMPLATES, TEMPLATE_CATEGORIES, type Template } from './templates'
+import { generateSlideOutlineFromPrompt, placeholderImageUrl } from './generateSlides'
 import './PresentationEditor.css'
 
 const SLIDE_WIDTH = 720
@@ -166,6 +167,10 @@ function PresentationEditorContent({
   const [sidebarTab, setSidebarTab] = useState<'design' | 'elements' | 'text'>('design')
   const [shareOpen, setShareOpen] = useState(false)
   const [recentlyUsed, setRecentlyUsed] = useState<string[]>([])
+  const [aiPrompt, setAiPrompt] = useState('')
+  const [aiLoading, setAiLoading] = useState(false)
+  const [aiError, setAiError] = useState<string | null>(null)
+  const [aiAddImages, setAiAddImages] = useState(true)
   const current = slidesList[currentIndex]
 
   const addToRecentlyUsed = useCallback((templateId: string) => {
@@ -337,6 +342,45 @@ function PresentationEditorContent({
     navigator.clipboard.writeText(url)
   }, [docId])
 
+  const generateFromAi = useCallback(async () => {
+    const prompt = aiPrompt.trim()
+    if (!prompt) {
+      setAiError('Enter a topic or prompt (e.g. "Q4 product launch" or "Intro to machine learning")')
+      return
+    }
+    setAiError(null)
+    setAiLoading(true)
+    try {
+      const outline = await generateSlideOutlineFromPrompt(prompt)
+      if (outline.length === 0) {
+        setAiError('AI returned no slides. Try a different prompt.')
+        return
+      }
+      const newSlides: Slide[] = outline.map((s, i) => {
+        const bg = PRESET_COLORS[i % PRESET_COLORS.length]
+        const slide: Slide = {
+          id: String(Date.now() + i),
+          title: s.title || `Slide ${i + 1}`,
+          content: s.content || '',
+          bg,
+        }
+        if (aiAddImages) {
+          slide.bgImage = placeholderImageUrl(slide.id, 720, 405)
+          slide.textColor = '#fff'
+        }
+        return slide
+      })
+      ySlides.delete(0, ySlides.length)
+      newSlides.forEach((s) => ySlides.push([s]))
+      setCurrentIndex(0)
+      setAiPrompt('')
+    } catch (e) {
+      setAiError(e instanceof Error ? e.message : 'Failed to generate slides')
+    } finally {
+      setAiLoading(false)
+    }
+  }, [aiPrompt, aiAddImages, ySlides])
+
   return (
     <div className="presentation-editor">
       <div ref={pdfExportRef} aria-hidden style={{ position: 'absolute', left: -9999 }} />
@@ -449,6 +493,43 @@ function PresentationEditorContent({
             <div className="presentation-editor__sidebar-panel">
               {sidebarTab === 'design' && (
                 <>
+                  <div className="presentation-editor__ai-generate">
+                    <p className="presentation-editor__design-label">Generate with AI</p>
+                    <p className="presentation-editor__design-hint presentation-editor__ai-hint">
+                      Describe your topic; a free local LLM (Ollama) will create a slide outline.
+                    </p>
+                    <textarea
+                      className="presentation-editor__ai-input"
+                      placeholder="e.g. Q4 product launch, Intro to machine learning, Team onboarding"
+                      value={aiPrompt}
+                      onChange={(e) => setAiPrompt(e.target.value)}
+                      rows={2}
+                      disabled={aiLoading}
+                      aria-label="Topic or prompt for AI slide deck"
+                    />
+                    <label className="presentation-editor__ai-checkbox">
+                      <input
+                        type="checkbox"
+                        checked={aiAddImages}
+                        onChange={(e) => setAiAddImages(e.target.checked)}
+                        disabled={aiLoading}
+                      />
+                      <span>Add placeholder images (free stock photos)</span>
+                    </label>
+                    <button
+                      type="button"
+                      className="presentation-editor__topbar-btn presentation-editor__topbar-btn--primary presentation-editor__ai-btn"
+                      onClick={generateFromAi}
+                      disabled={aiLoading}
+                    >
+                      {aiLoading ? 'Generating…' : 'Generate slide deck'}
+                    </button>
+                    {aiError && (
+                      <p className="presentation-editor__ai-error" role="alert">
+                        {aiError}
+                      </p>
+                    )}
+                  </div>
                   <p className="presentation-editor__design-hint">
                     Choose a template to apply to the current slide or the whole presentation.
                   </p>
